@@ -4,6 +4,10 @@ import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Users, BarChart3, RotateCw, History, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
+} from 'recharts';
 
 interface Stats {
     users: { total_users: string; pro_users: string; free_users: string };
@@ -71,34 +75,47 @@ export default function AdminPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
-                    <h3 className="text-xl font-bold text-foreground mb-6">User Composition</h3>
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden flex">
-                            <div
-                                className="bg-primary h-full"
-                                style={{ width: `${(Number(stats?.users.pro_users) / Number(stats?.users.total_users)) * 100}%` }}
+                <div className="bg-card border border-border rounded-3xl p-8 shadow-sm h-[400px]">
+                    <h3 className="text-xl font-bold text-foreground mb-6 uppercase tracking-tight">User Segment distribution</h3>
+                    <ResponsiveContainer width="100%" height="80%">
+                        <PieChart>
+                            <Pie
+                                data={[
+                                    { name: 'Pro Users', value: Number(stats?.users.pro_users || 0) },
+                                    { name: 'Free Users', value: Number(stats?.users.free_users || 0) }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                <Cell fill="#6366f1" />
+                                <Cell fill="#e2e8f0" />
+                            </Pie>
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px', color: '#fff' }}
+                                itemStyle={{ color: '#fff' }}
                             />
-                            <div
-                                className="bg-muted-foreground/30 h-full"
-                                style={{ width: `${(Number(stats?.users.free_users) / Number(stats?.users.total_users)) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex justify-between mt-4 text-sm font-medium">
-                        <span className="text-primary">Pro Users</span>
-                        <span className="text-muted-foreground">Free Users</span>
-                    </div>
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
                 </div>
 
-                <div className="bg-card border border-border rounded-3xl p-8 flex items-center justify-between shadow-sm">
-                    <div>
-                        <h3 className="text-xl font-bold text-foreground mb-2">Average Match Score</h3>
-                        <p className="text-muted-foreground text-sm font-medium mb-4">Quality of all AI-generated analyses.</p>
-                        <div className="text-5xl font-black text-foreground">{Math.round(stats?.analyses.avg_score || 0)}%</div>
-                    </div>
-                    <div className="w-24 h-24 border-8 border-primary/20 border-t-primary rounded-full flex items-center justify-center">
-                        <span className="text-primary font-black text-xl">{Math.round(stats?.analyses.avg_score || 0)}</span>
+                <div className="bg-card border border-border rounded-3xl p-8 shadow-sm h-[400px]">
+                    <h3 className="text-xl font-bold text-foreground mb-6 uppercase tracking-tight">Platform Performance</h3>
+                    <div className="flex flex-col items-center justify-center h-full pb-10">
+                        <div className="text-7xl font-black text-foreground mb-2">{Math.round(stats?.analyses.avg_score || 0)}%</div>
+                        <p className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-8">Average Match Score</p>
+
+                        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${stats?.analyses.avg_score || 0}%` }}
+                                className="h-full bg-primary"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Lock, LogIn } from 'lucide-react';
+import Image from 'next/image';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -95,6 +96,12 @@ export default function LoginPage() {
                             </motion.div>
                         )}
 
+                        <div className="flex items-center justify-between mt-2">
+                            <Link href="/forgot-password" className="text-xs text-muted-foreground hover:underline underline-offset-2">
+                                Forgot password?
+                            </Link>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={loading}
@@ -103,6 +110,16 @@ export default function LoginPage() {
                             {loading ? 'Authenticating...' : 'Sign In Now'}
                             {!loading && <LogIn className="w-5 h-5" />}
                         </button>
+
+                        <div className="mt-4">
+                            <a
+                                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/google`}
+                                className="w-full inline-flex items-center justify-center gap-3 border border-border bg-background text-foreground py-3 rounded-2xl font-bold hover:bg-gray-50 transition-colors"
+                            >
+                                <Image src="/google-logo.svg" alt="Google" width={18} height={18} />
+                                Sign in with Google
+                            </a>
+                        </div>
                     </form>
 
                     <div className="mt-8 text-center text-sm">

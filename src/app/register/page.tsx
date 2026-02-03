@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Lock, User, UserPlus } from 'lucide-react';
+import Image from 'next/image';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -27,8 +28,33 @@ export default function RegisterPage() {
                 full_name: fullName
             });
             router.push('/login');
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Registration failed');
+        } catch (err: unknown) {
+            interface ErrorResponse {
+                response?: {
+                    data?: {
+                        error?: string;
+                    };
+                };
+            }
+
+            const errorObj = err as ErrorResponse;
+
+            if (
+                typeof err === 'object' &&
+                err !== null &&
+                'response' in errorObj &&
+                typeof errorObj.response === 'object' &&
+                errorObj.response !== null &&
+                'data' in errorObj.response &&
+                typeof errorObj.response.data === 'object' &&
+                errorObj.response.data !== null &&
+                'error' in errorObj.response.data &&
+                typeof errorObj.response.data.error === 'string'
+            ) {
+                setError(errorObj.response.data.error as string);
+            } else {
+                setError('Registration failed');
+            }
         } finally {
             setLoading(false);
         }
@@ -54,7 +80,7 @@ export default function RegisterPage() {
 
                 <div className="bg-card border border-border p-10 rounded-[3rem] shadow-2xl backdrop-blur-sm">
                     <div className="text-center mb-10">
-                        <img src="/logo.png" alt="ChooJobs" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
+                        <Image src="/logo.png" alt="ChooJobs" width={64} height={64} className="w-16 h-16 rounded-2xl mx-auto mb-4" />
                         <h1 className="text-3xl font-black text-foreground uppercase tracking-tighter">Join the Engine</h1>
                         <p className="text-muted-foreground font-medium italic">Create your ChooJobs account</p>
                     </div>
@@ -123,6 +149,16 @@ export default function RegisterPage() {
                             {loading ? 'Creating Account...' : 'Get Started Now'}
                             {!loading && <UserPlus className="w-5 h-5" />}
                         </button>
+
+                        <div className="mt-4">
+                            <a
+                                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/google`}
+                                className="w-full inline-flex items-center justify-center gap-3 border border-border bg-background text-foreground py-3 rounded-2xl font-bold hover:bg-gray-50 hover:text-black transition-colors"
+                            >
+                                <Image src="/google-logo.svg" alt="Google" width={18} height={18} />
+                                Sign up with Google
+                            </a>
+                        </div>
                     </form>
 
                     <div className="mt-8 text-center text-sm">

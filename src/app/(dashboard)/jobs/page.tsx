@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { Search, MapPin, ExternalLink, Sparkles, Filter, X, CheckCircle2, ChevronRight, ShieldAlert } from 'lucide-react';
+import { Search, MapPin, ExternalLink, Sparkles, Filter, X, CheckCircle2, ChevronRight, ShieldAlert, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Job {
@@ -35,11 +36,11 @@ export default function JobsPage() {
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [selectedResumeId, setSelectedResumeId] = useState('');
+    const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        fetchJobs();
-        fetchResumes();
-    }, [search, location]);
+    const [showFilters, setShowFilters] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedSource, setSelectedSource] = useState('');
 
     const fetchResumes = async () => {
         try {
@@ -52,19 +53,29 @@ export default function JobsPage() {
         }
     };
 
-    const fetchJobs = async () => {
-        setIsLoading(true);
-        try {
-            const res = await api.get('/jobs', {
-                params: { search, location }
-            });
-            setJobs(res.data.jobs);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    useEffect(() => {
+        const fetchJobs = async () => {
+            setIsLoading(true);
+            try {
+                const res = await api.get('/jobs', {
+                    params: {
+                        search,
+                        location,
+                        category: selectedCategory,
+                        source: selectedSource
+                    }
+                });
+                setJobs(res.data.jobs);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchJobs();
+        fetchResumes();
+    }, [search, location, selectedCategory, selectedSource]);
 
     const handleAnalyze = async (job: Job) => {
         if (!selectedResumeId) {
@@ -85,6 +96,30 @@ export default function JobsPage() {
             alert('Analysis failed. Make sure you have enough credits.');
         } finally {
             setIsAnalyzing(false);
+        }
+    };
+
+    const handleExport = async (type: 'pdf' | 'docx') => {
+        if (!analysisResult) return;
+
+        try {
+            const res = await api.post(`/resumes/export?type=${type}`, {
+                ...analysisResult,
+                fullName: user?.full_name || 'Professional'
+            }, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Optimized_Resume.${type}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error(err);
+            alert('Export failed');
         }
     };
 
@@ -117,11 +152,57 @@ export default function JobsPage() {
                         onChange={(e) => setLocation(e.target.value)}
                     />
                 </div>
-                <button className="flex items-center justify-center gap-2 bg-card border border-border rounded-2xl py-4 px-6 hover:bg-muted transition-all text-muted-foreground hover:text-foreground">
+                <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center justify-center gap-2 border rounded-2xl py-4 px-6 transition-all tracking-tighter ${showFilters ? 'bg-primary text-white border-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                >
                     <Filter className="w-5 h-5" />
-                    <span className="font-bold uppercase tracking-widest text-xs tracking-tighter">Advanced Filters</span>
+                    <span className="font-bold uppercase tracking-widest text-xs">Advanced Filters</span>
                 </button>
             </div>
+
+            {/* Advanced Filters Panel */}
+            <AnimatePresence>
+                {showFilters && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden mb-10"
+                    >
+                        <div className="bg-card border border-border rounded-3xl p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Job Category</label>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground font-medium"
+                                >
+                                    <option value="">All Categories</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Job Source</label>
+                                <select
+                                    value={selectedSource}
+                                    onChange={(e) => setSelectedSource(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground font-medium"
+                                >
+                                    <option value="">All Sources</option>
+                                    <option value="Indeed">Indeed</option>
+                                    <option value="LinkedIn">LinkedIn</option>
+                                    <option value="Glassdoor">Glassdoor</option>
+                                </select>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Job Grid */}
             <div className="space-y-4">
@@ -142,8 +223,9 @@ export default function JobsPage() {
                                 <div className="flex flex-col md:flex-row justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors uppercase tracking-tight">{job.title}</h3>
-                                            <span className="bg-muted text-muted-foreground text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest">{job.source}</span>
+                                            <Link href={`/jobs/${job.id}`}>
+                                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors uppercase tracking-tight cursor-pointer">{job.title}</h3>
+                                            </Link>
                                         </div>
                                         <p className="text-foreground/80 font-medium mb-4">{job.company}</p>
 
@@ -165,9 +247,28 @@ export default function JobsPage() {
                                             <Sparkles className="w-4 h-4" />
                                             Analyze Match
                                         </button>
-                                        <button className="p-2.5 bg-muted hover:bg-muted/80 rounded-xl transition-all border border-border">
-                                            <ExternalLink className="w-5 h-5 text-muted-foreground" />
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const currentlySaved = !!savingMap[job.id];
+                                                    if (currentlySaved) {
+                                                        await api.delete(`/saved-jobs/jobs/${job.id}/save`);
+                                                    } else {
+                                                        await api.post(`/saved-jobs/jobs/${job.id}/save`);
+                                                    }
+                                                    setSavingMap(prev => ({ ...prev, [job.id]: !currentlySaved }));
+                                                } catch (err) {
+                                                    console.error('Toggle save failed', err);
+                                                    alert('Failed to update saved job');
+                                                }
+                                            }}
+                                            className={`px-3 py-2 rounded-xl border ${savingMap[job.id] ? 'bg-rose-500 text-white' : 'bg-card border-border'}`}
+                                        >
+                                            {savingMap[job.id] ? 'Saved' : 'Save'}
                                         </button>
+                                        <Link href={`/jobs/${job.id}`} className="p-2.5 bg-muted hover:bg-muted/80 rounded-xl transition-all border border-border">
+                                            <ExternalLink className="w-5 h-5 text-muted-foreground" />
+                                        </Link>
                                     </div>
                                 </div>
                             </motion.div>
@@ -201,7 +302,7 @@ export default function JobsPage() {
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-black text-foreground uppercase tracking-tight leading-none mb-1">AI Insights</h2>
-                                        <p className="text-sm text-muted-foreground font-bold truncate max-w-[300px] uppercase tracking-widest">{selectedJob.title}</p>
+                                        <p className="text-sm text-muted-foreground font-bold truncate max-w-75 uppercase tracking-widest">{selectedJob.title}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setSelectedJob(null)} className="p-3 hover:bg-muted rounded-2xl transition-all">
@@ -219,7 +320,7 @@ export default function JobsPage() {
                                 ) : analysisResult ? (
                                     <div className="space-y-10">
                                         {/* Score Circle */}
-                                        <div className="flex flex-col md:flex-row items-center gap-10 bg-muted/30 p-10 rounded-[2rem] border border-border">
+                                        <div className="flex flex-col md:flex-row items-center gap-10 bg-muted/30 p-10 rounded-4xl border border-border">
                                             <div className="relative w-40 h-40 flex items-center justify-center">
                                                 <svg className="w-full h-full -rotate-90">
                                                     <circle cx="80" cy="80" r="74" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted/20" />
@@ -273,7 +374,7 @@ export default function JobsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-muted/30 border border-border p-8 rounded-[2rem]">
+                                        <div className="bg-muted/30 border border-border p-8 rounded-4xl">
                                             <h5 className="text-foreground font-black uppercase tracking-widest text-[10px] mb-6 flex items-center gap-2">
                                                 <ChevronRight className="w-5 h-5 text-primary" />
                                                 AI Recommendations
@@ -293,11 +394,27 @@ export default function JobsPage() {
 
                             <div className="p-8 bg-card/80 border-t border-border flex justify-end items-center gap-4">
                                 <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Powered by Gemini Pro</span>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <button
+                                        onClick={() => handleExport('pdf')}
+                                        className="bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        Export PDF
+                                    </button>
+                                    <button
+                                        onClick={() => handleExport('docx')}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Export DOCX
+                                    </button>
+                                </div>
                                 <button
                                     onClick={() => setSelectedJob(null)}
-                                    className="bg-foreground text-background font-black px-10 py-4 rounded-2xl transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95"
+                                    className="bg-muted hover:bg-muted/80 text-foreground font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] active:scale-95"
                                 >
-                                    Confirm & Close
+                                    Close
                                 </button>
                             </div>
                         </motion.div>
