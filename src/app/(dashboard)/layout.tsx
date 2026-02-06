@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
+import HeaderMobile from '@/components/MobileHeader';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +13,9 @@ export default function DashboardLayout({
 }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = React.useState(false);
 
     if (loading) {
         return (
@@ -27,11 +31,26 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="flex min-h-screen bg-background">
-            <Sidebar />
-            <main className="flex-1 p-8 text-foreground">
+        <div className="flex min-h-screen bg-background flex-col md:flex-row">
+            {/* Mobile Header */}
+            <div className="md:hidden">
+                <HeaderMobile onOpenSidebar={() => setIsMobileMenuOpen(true)} />
+            </div>
+
+            {/* Sidebar */}
+            <Sidebar
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                isCollapsed={isDesktopCollapsed}
+                toggleCollapse={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
+            />
+
+            {/* Main Content */}
+            <main className="flex-1 p-4 md:p-8 text-foreground transition-all duration-300">
                 {children}
             </main>
         </div>
     );
 }
+
+

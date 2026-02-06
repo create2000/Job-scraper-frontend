@@ -31,6 +31,8 @@ export default function JobsPage() {
     const [search, setSearch] = useState('');
     const [location, setLocation] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -62,10 +64,14 @@ export default function JobsPage() {
                         search,
                         location,
                         category: selectedCategory,
-                        source: selectedSource
+                        source: selectedSource,
+                        page: 1,
+                        limit: 20
                     }
                 });
                 setJobs(res.data.jobs);
+                setHasMore(res.data.jobs.length === 20);
+                setPage(1);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -76,6 +82,27 @@ export default function JobsPage() {
         fetchJobs();
         fetchResumes();
     }, [search, location, selectedCategory, selectedSource]);
+
+    const loadMore = async () => {
+        const nextPage = page + 1;
+        try {
+            const res = await api.get('/jobs', {
+                params: {
+                    search,
+                    location,
+                    category: selectedCategory,
+                    source: selectedSource,
+                    page: nextPage,
+                    limit: 20
+                }
+            });
+            setJobs(prev => [...prev, ...res.data.jobs]);
+            setHasMore(res.data.jobs.length === 20);
+            setPage(nextPage);
+        } catch (err) {
+            console.error('Failed to load more jobs:', err);
+        }
+    };
 
     const handleAnalyze = async (job: Job) => {
         if (!selectedResumeId) {
@@ -195,8 +222,8 @@ export default function JobsPage() {
                                 >
                                     <option value="">All Sources</option>
                                     <option value="Indeed">Indeed</option>
-                                    <option value="LinkedIn">LinkedIn</option>
-                                    <option value="Glassdoor">Glassdoor</option>
+                                    <option value="RemoteOK">RemoteOK</option>
+                                    <option value="WeWorkRemotely">We Work Remotely</option>
                                 </select>
                             </div>
                         </div>
@@ -276,6 +303,23 @@ export default function JobsPage() {
                     </AnimatePresence>
                 )}
             </div>
+
+            {/* Load More Button */}
+            {jobs.length > 0 && hasMore && (
+                <div className="flex justify-center mt-12 mb-10">
+                    <button
+                        onClick={loadMore}
+                        className="bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-sm shadow-lg active:scale-95"
+                    >
+                        Load More Jobs
+                    </button>
+                </div>
+            )}
+            {jobs.length > 0 && !hasMore && (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground font-bold uppercase tracking-widest text-sm">No more jobs to load</p>
+                </div>
+            )}
 
             {/* Analysis Modal */}
             <AnimatePresence>

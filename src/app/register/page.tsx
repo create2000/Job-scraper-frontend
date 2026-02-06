@@ -80,7 +80,9 @@ export default function RegisterPage() {
 
                 <div className="bg-card border border-border p-10 rounded-[3rem] shadow-2xl backdrop-blur-sm">
                     <div className="text-center mb-10">
-                        <Image src="/logo.png" alt="ChooJobs" width={64} height={64} className="w-16 h-16 rounded-2xl mx-auto mb-4" />
+                        <div className="bg-white rounded-2xl p-2 w-fit mx-auto mb-4">
+                            <Image src="/logo.png" alt="ChooJobs" width={64} height={64} className="w-16 h-16 rounded-xl" />
+                        </div>
                         <h1 className="text-3xl font-black text-foreground uppercase tracking-tighter">Join the Engine</h1>
                         <p className="text-muted-foreground font-medium italic">Create your ChooJobs account</p>
                     </div>

@@ -87,6 +87,20 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         try {
             const res = await api.get(`/jobs/${id}`);
             setJob(res.data);
+            
+            // Auto-scrape job description if empty
+            if (!res.data.description || res.data.description.trim() === '') {
+                try {
+                    console.log('Job description is empty, attempting to scrape...');
+                    await api.post(`/jobs/${id}/scrape-detail`);
+                    // Re-fetch after scraping
+                    const updatedRes = await api.get(`/jobs/${id}`);
+                    setJob(updatedRes.data);
+                } catch (scrapeErr) {
+                    console.error('Failed to scrape job description:', scrapeErr);
+                    // Continue - description may not be available
+                }
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -173,7 +187,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                             </span>
                         </div>
 
-                        <h1 className="text-4xl md:text-5xl font-black text-foreground uppercase tracking-tighter mb-6 leading-tight">
+                        <h1 className="text-2xl md:text-2xl font-black text-foreground uppercase tracking-tighter mb-6 leading-tight">
                             {job.title}
                         </h1>
 
@@ -215,9 +229,35 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     {/* Main Content */}
                     <div className="lg:col-span-2 p-10 border-r border-border">
                         <h2 className="text-2xl font-black text-foreground uppercase tracking-tight mb-8">Job Description</h2>
-                        <div className="prose prose-invert max-w-none text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">
-                            {job.description}
-                        </div>
+                        {job.description && job.description.trim() ? (
+                            <div className="prose prose-invert max-w-none text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">
+                                {job.description}
+                            </div>
+                        ) : (
+                            <div className="bg-muted/20 border border-muted-foreground/20 rounded-2xl p-8 text-center">
+                                <p className="text-muted-foreground mb-6 italic">
+                                    The job description is loading or unavailable. Please visit the job source directly for details.
+                                </p>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            console.log('Attempting to scrape job description...');
+                                            await api.post(`/jobs/${id}/scrape-detail`);
+                                            // Re-fetch after scraping
+                                            const res = await api.get(`/jobs/${id}`);
+                                            setJob(res.data);
+                                            alert('Description updated! Please refresh to see changes.');
+                                        } catch (err) {
+                                            console.error('Scrape failed:', err);
+                                            alert('Failed to fetch description. Please try visiting the source job page directly.');
+                                        }
+                                    }}
+                                    className="bg-primary hover:bg-primary/90 text-white font-black px-6 py-3 rounded-xl transition-all"
+                                >
+                                    Try Fetching Description
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar Actions */}
@@ -284,7 +324,23 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                             {/* Persistent Apply CTA */}
                             <div className="mt-4">
                                 <button
-                                    onClick={() => setIsApplying(true)}
+                                    onClick={async () => {
+                                        try {
+                                            const res = await api.post(`/jobs/${id}/record`);
+                                            const url = res.data?.url;
+                                            if (url) {
+                                                window.open(url, '_blank');
+                                            } else {
+                                                // fallback to backend redirect endpoint
+                                                const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                                                window.open(`${backend}/jobs/${id}/redirect`, '_blank');
+                                            }
+                                        } catch (err) {
+                                            console.error('Failed to record click, falling back to redirect', err);
+                                            const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                                            window.open(`${backend}/jobs/${id}/redirect`, '_blank');
+                                        }
+                                    }}
                                     className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl transition-all"
                                 >
                                     Apply Now
