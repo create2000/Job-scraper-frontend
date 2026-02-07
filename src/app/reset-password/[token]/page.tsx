@@ -6,6 +6,9 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import { Lock, CheckCircle } from 'lucide-react';
 
+// Force dynamic rendering for this page since it uses dynamic params
+export const dynamic = 'force-dynamic';
+
 export default function ResetPasswordPage() {
     const params = useParams();
     const token = params?.token as string;

@@ -5,6 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
+// Force dynamic rendering for this page since it uses searchParams
+export const dynamic = 'force-dynamic';
+
 export default function AuthCallbackPage() {
     const search = useSearchParams();
     const token = search?.get('token');
