@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import { Lock, CheckCircle } from 'lucide-react';
 // Force dynamic rendering for this page since it uses dynamic params
 export const dynamic = 'force-dynamic';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const params = useParams();
     const token = params?.token as string;
     const router = useRouter();
@@ -135,5 +135,19 @@ export default function ResetPasswordPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+                <div className="bg-card border border-border p-8 rounded-2xl text-center">
+                    <p className="font-bold">Loading...</p>
+                </div>
+            </div>
+        }>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
