@@ -54,7 +54,7 @@ export default function AdminPage() {
             <div className="flex justify-between items-center mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-foreground mb-2 uppercase tracking-tight">Admin Terminal</h1>
-                    <p className="text-muted-foreground font-medium italic">High-level overview of the ChooJobs ecosystem.</p>
+                    <p className="text-muted-foreground font-medium italic">High-level overview of the Quintly ecosystem.</p>
                 </div>
 
                 <button

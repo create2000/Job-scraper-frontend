@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ChooJobs | We find it. AI fits it. You land it.",
+  title: "Quintly | We find it. AI fits it. You land it.",
   description: "The next generation job marketplace powered by AI resume analysis.",
 };
 

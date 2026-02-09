@@ -76,11 +76,11 @@ export default function Sidebar({
                 <div className={cn("p-6 pb-2", isCollapsed && "p-4 items-center")}>
                     <div className={cn("flex items-center gap-3 mb-6", isCollapsed && "justify-center mb-6")}>
                         <div className="bg-white rounded-lg p-1 shrink-0">
-                            <img src="/logo.png" alt="ChooJobs" className="w-12 h-12 object-contain" />
+                            <img src="/logo.png" alt="Quintly" className="w-12 h-12 object-contain" />
                         </div>
                         {!isCollapsed && (
                             <div className="flex items-center justify-between flex-1">
-                                <span className="text-xl font-bold text-foreground tracking-tight">ChooJobs</span>
+                                <span className="text-xl font-bold text-foreground tracking-tight">Quintly</span>
                                 <button onClick={onClose} className="md:hidden text-muted-foreground p-1 hover:bg-muted rounded">
                                     <X className="w-5 h-5" />
                                 </button>

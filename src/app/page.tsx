@@ -42,9 +42,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden">
-              <img src="/logo.png" alt="ChooJobs" className="w-8 h-8 object-contain" />
+              <img src="/logo.png" alt="Quintly" className="w-8 h-8 object-contain" />
             </div>
-            <span className="text-xl font-black uppercase tracking-tighter">ChooJobs</span>
+            <span className="text-xl font-black uppercase tracking-tighter">Quintly</span>
           </div>
 
           {/* Desktop Nav */}
@@ -102,7 +102,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="max-w-2xl text-lg md:text-xl text-white/60 mb-12 font-medium leading-relaxed italic">
-            Stop applying blindly. ChooJobs scrapes the entire web and uses neural match technology to find the roles you&apos;re actually qualified for.
+            Stop applying blindly. Quintly scrapes the entire web and uses neural match technology to find the roles you&apos;re actually qualified for.
           </p>
 
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
@@ -223,7 +223,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
               <img src="/logo.png" alt="Ch  ooJobs" className="w-6 h-6 object-contain" />
             </div>
-            <span className="text-sm font-black uppercase tracking-tighter">ChooJobs</span>
+            <span className="text-sm font-black uppercase tracking-tighter">Quintly</span>
           </div>
           <p className="text-white/30 font-black uppercase tracking-widest text-[10px]">
             © 2026 CHOOJOBS ENGINEERING — ALL RIGHTS RESERVED

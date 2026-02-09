@@ -12,9 +12,9 @@ export default function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
         <div className="md:hidden flex items-center justify-between p-4 bg-background border-b border-border sticky top-0 z-30">
             <div className="flex items-center gap-2">
                 <div className="bg-white rounded p-1">
-                    <img src="/logo.png" alt="ChooJobs" className="w-6 h-6 object-contain" />
+                    <img src="/logo.png" alt="Quintly" className="w-6 h-6 object-contain" />
                 </div>
-                <span className="font-bold text-lg tracking-tight">ChooJobs</span>
+                <span className="font-bold text-lg tracking-tight">Quintly</span>
             </div>
 
             <button

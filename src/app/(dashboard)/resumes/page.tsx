@@ -55,7 +55,7 @@ export default function ResumesPage() {
             <div className="flex justify-between items-center mb-12">
                 <div>
                     <h1 className="text-3xl font-black text-foreground mb-4 uppercase tracking-tight">Your Portfolio</h1>
-                    <p className="text-muted-foreground text-lg italic">Manage your professional identity for the ChooJobs engine.</p>
+                    <p className="text-muted-foreground text-lg italic">Manage your professional identity for the Quintly engine.</p>
                 </div>
 
                 <label className="cursor-pointer group">
