@@ -317,7 +317,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                                     onClick={handleAnalyze}
                                     className="w-full bg-primary hover:bg-primary/90 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 active:scale-95"
                                 >
-                                    <Sparkles className="w-4 h-4" />
+                                    <Sparkles className="w-8 h-4" />
                                     Run Match Engine
                                 </button>
                             )}
