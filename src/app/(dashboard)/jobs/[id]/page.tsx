@@ -87,7 +87,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         try {
             const res = await api.get(`/jobs/${id}`);
             setJob(res.data);
-            
+
             // Auto-scrape job description if empty
             if (!res.data.description || res.data.description.trim() === '') {
                 try {
@@ -187,7 +187,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                             </span>
                         </div>
 
-                        <h1 className="text-2xl md:text-2xl font-black text-foreground uppercase tracking-tighter mb-6 leading-tight">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight mb-8 leading-tight">
                             {job.title}
                         </h1>
 
@@ -322,30 +322,28 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                                 </button>
                             )}
                             {/* Persistent Apply CTA */}
-                            <div className="mt-4">
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const res = await api.post(`/jobs/${id}/record`);
-                                            const url = res.data?.url;
-                                            if (url) {
-                                                window.open(url, '_blank');
-                                            } else {
-                                                // fallback to backend redirect endpoint
-                                                const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-                                                window.open(`${backend}/jobs/${id}/redirect`, '_blank');
-                                            }
-                                        } catch (err) {
-                                            console.error('Failed to record click, falling back to redirect', err);
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const res = await api.post(`/jobs/${id}/record`);
+                                        const url = res.data?.url;
+                                        if (url) {
+                                            window.open(url, '_blank');
+                                        } else {
+                                            // fallback to backend redirect endpoint
                                             const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
                                             window.open(`${backend}/jobs/${id}/redirect`, '_blank');
                                         }
-                                    }}
-                                    className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl transition-all"
-                                >
-                                    Apply Now
-                                </button>
-                            </div>
+                                    } catch (err) {
+                                        console.error('Failed to record click, falling back to redirect', err);
+                                        const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                                        window.open(`${backend}/jobs/${id}/redirect`, '_blank');
+                                    }
+                                }}
+                                className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95"
+                            >
+                                Apply Now
+                            </button>
                         </div>
 
                         {analysisResult && (

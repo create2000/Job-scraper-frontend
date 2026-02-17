@@ -75,8 +75,8 @@ export default function Sidebar({
                 {/* Header */}
                 <div className={cn("p-6 pb-2", isCollapsed && "p-4 items-center")}>
                     <div className={cn("flex items-center gap-3 mb-6", isCollapsed && "justify-center mb-6")}>
-                        <div className="bg-white rounded-lg p-1 shrink-0">
-                            <img src="/logo.png" alt="Quintly" className="w-12 h-12 object-contain" />
+                        <div className="bg-white rounded-lg p-1 shrink-0 shadow-sm border border-border">
+                            <img src="/logo.png" alt="Quintly" className="w-10 h-10 object-contain" />
                         </div>
                         {!isCollapsed && (
                             <div className="flex items-center justify-between flex-1">
@@ -95,7 +95,7 @@ export default function Sidebar({
                             className="text-muted-foreground hover:bg-muted p-2 rounded-lg transition-colors border-2 border-transparent hover:border-border"
                             title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                         >
-                            {isCollapsed ?  <TbLayoutSidebarRightCollapseFilled className="w-5 h-5" /> : <RiCollapseDiagonalLine  className="w-5 h-5" />}
+                            {isCollapsed ? <TbLayoutSidebarRightCollapseFilled className="w-5 h-5" /> : <RiCollapseDiagonalLine className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
@@ -113,14 +113,14 @@ export default function Sidebar({
                                         "flex items-center p-3 rounded-xl transition-all group",
                                         isCollapsed ? "justify-center" : "justify-between",
                                         isActive
-                                            ? "bg-primary/10 text-primary"
+                                            ? "bg-primary/5 text-primary"
                                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                     )}
                                     title={isCollapsed ? item.name : undefined}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <item.icon className="w-5 h-5 shrink-0" />
-                                        {!isCollapsed && <span className="font-medium">{item.name}</span>}
+                                        <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                                        {!isCollapsed && <span className="font-semibold">{item.name}</span>}
                                     </div>
                                     {!isCollapsed && isActive && <ChevronRight className="w-4 h-4" />}
                                 </Link>

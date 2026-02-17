@@ -153,8 +153,8 @@ export default function JobsPage() {
     return (
         <div className="pb-20">
             <div className="mb-10">
-                <h1 className="text-3xl font-black text-foreground mb-4 uppercase tracking-tight">Discover Opportunities</h1>
-                <p className="text-muted-foreground text-lg">Browse thousands of jobs scraped specifically for you.</p>
+                <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">Discover Opportunities</h1>
+                <p className="text-muted-foreground text-lg font-medium">Browse thousands of jobs scraped specifically for you.</p>
             </div>
 
             {/* Filters */}
@@ -309,7 +309,7 @@ export default function JobsPage() {
                 <div className="flex justify-center mt-12 mb-10">
                     <button
                         onClick={loadMore}
-                        className="bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-sm shadow-lg active:scale-95"
+                        className="bg-primary hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-lg active:scale-95"
                     >
                         Load More Jobs
                     </button>

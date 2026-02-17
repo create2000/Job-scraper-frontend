@@ -80,11 +80,11 @@ export default function RegisterPage() {
 
                 <div className="bg-card border border-border p-10 rounded-[3rem] shadow-2xl backdrop-blur-sm">
                     <div className="text-center mb-10">
-                        <div className="bg-white rounded-2xl p-2 w-fit mx-auto mb-4">
-                            <Image src="/logo.png" alt="Quintly" width={64} height={64} className="w-16 h-16 rounded-xl" />
+                        <div className="bg-white rounded-2xl p-2 w-fit mx-auto mb-6 shadow-sm border border-border">
+                            <img src="/logo.png" alt="Quintly" className="w-12 h-12" />
                         </div>
-                        <h1 className="text-3xl font-black text-foreground uppercase tracking-tighter">Join the Engine</h1>
-                        <p className="text-muted-foreground font-medium italic">Create your Quintly account</p>
+                        <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Join the Engine</h1>
+                        <p className="text-muted-foreground font-medium">Create your Quintly account</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                            className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95 disabled:opacity-50"
                         >
                             {loading ? 'Creating Account...' : 'Get Started Now'}
                             {!loading && <UserPlus className="w-5 h-5" />}
