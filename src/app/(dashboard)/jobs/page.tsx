@@ -153,7 +153,7 @@ export default function JobsPage() {
     return (
         <div className="pb-20">
             <div className="mb-10">
-                <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">Discover Opportunities</h1>
+                <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Discover Opportunities</h1>
                 <p className="text-muted-foreground text-lg font-medium">Browse thousands of jobs scraped specifically for you.</p>
             </div>
 

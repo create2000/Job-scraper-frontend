@@ -158,7 +158,7 @@ export default function LandingPage() {
             {/* Free Tier */}
             <div className="bg-card border border-border p-10 rounded-3xl shadow-sm flex flex-col">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">The Candidate</span>
-              <div className="text-5xl font-bold mb-6 italic">Free</div>
+              <div className="text-4xl font-bold mb-6 italic">Free</div>
               <p className="text-muted-foreground mb-8 font-medium">Perfect for getting started</p>
 
               <ul className="space-y-4 mb-10 flex-1">
@@ -183,7 +183,7 @@ export default function LandingPage() {
                 Best Value
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-white/70 mb-4">The Engineer</span>
-              <div className="text-5xl font-bold mb-6 italic">₦5,000<span className="text-xl font-normal opacity-70">/mo</span></div>
+              <div className="text-4xl font-bold mb-6 italic">₦5,000<span className="text-xl font-normal opacity-70">/mo</span></div>
               <p className="text-white/80 mb-8 font-medium">For serious job seekers</p>
 
               <ul className="space-y-4 mb-10 flex-1">

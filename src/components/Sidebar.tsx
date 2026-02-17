@@ -50,7 +50,7 @@ export default function Sidebar({
     ];
 
     if (user?.role === 'admin') {
-        navItems.push({ name: 'Admin Panel', href: '/admin', icon: ShieldCheck });
+        navItems.push({ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck });
     }
 
     return (

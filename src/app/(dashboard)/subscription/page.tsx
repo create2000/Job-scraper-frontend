@@ -54,7 +54,7 @@ export default function SubscriptionPage() {
     return (
         <div className="max-w-6xl mx-auto py-12 px-6">
             <div className="mb-12">
-                <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">Upgrade Your Career</h1>
+                <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Upgrade Your Career</h1>
                 <p className="text-muted-foreground text-lg font-medium">Choose the plan that fits your career goals and unlocks AI-powered insights.</p>
             </div>
 
@@ -63,7 +63,7 @@ export default function SubscriptionPage() {
                 <div className="bg-card border border-border p-8 md:p-12 rounded-[2.5rem] flex flex-col shadow-sm hover:shadow-md transition-shadow">
                     <div className="mb-10">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">The Candidate</h3>
-                        <div className="text-6xl font-extrabold mb-3">Free</div>
+                        <div className="text-4xl font-extrabold mb-3">Free</div>
                         <p className="text-muted-foreground font-medium">Perfect for basic job hunting and exploring.</p>
                     </div>
                     <ul className="space-y-5 mb-12 flex-1">
