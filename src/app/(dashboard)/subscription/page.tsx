@@ -1,148 +1,175 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
-import { Check, Zap, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Check, Zap, Star, Coins } from 'lucide-react';
+import axios from 'axios';
+
+const CREDIT_BUNDLES = [
+    {
+        id: 'basic',
+        name: 'Starter Pack',
+        credits: 10,
+        priceNGN: 5000,
+        priceUSD: 5,
+        description: 'Perfect for a quick job search boost.',
+        icon: Coins,
+        color: 'text-blue-500',
+        bgColor: 'bg-blue-500/10'
+    },
+    {
+        id: 'pro',
+        name: 'Career Pro',
+        credits: 30,
+        priceNGN: 15000,
+        priceUSD: 12,
+        description: 'The most popular choice for serious seekers.',
+        icon: Zap,
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
+        recommended: true
+    },
+    {
+        id: 'elite',
+        name: 'Elite Hunter',
+        credits: 100,
+        priceNGN: 40000,
+        priceUSD: 30,
+        description: 'Unlimited potential for high-volume applications.',
+        icon: Star,
+        color: 'text-yellow-500',
+        bgColor: 'bg-yellow-500/10'
+    }
+];
 
 export default function SubscriptionPage() {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [currency, setCurrency] = useState<'NGN' | 'USD'>('NGN');
+    const [location, setLocation] = useState<string>('Detecting...');
 
-    const handleSubscribe = async () => {
+    useEffect(() => {
+        const detectLocation = async () => {
+            try {
+                const res = await axios.get('https://ipapi.co/json/');
+                if (res.data.country_code !== 'NG') {
+                    setCurrency('USD');
+                }
+                setLocation(res.data.country_name || 'Global');
+            } catch (err) {
+                console.error('Location detection failed', err);
+                setLocation('Global');
+            }
+        };
+        detectLocation();
+    }, []);
+
+    const handleSubscribe = async (bundleId: string) => {
         setIsLoading(true);
         try {
             const res = await api.post('/payment/initialize', {
                 email: user?.email,
-                amount: 5000
+                bundleId,
+                currency
             });
             window.location.href = res.data.data.authorization_url;
         } catch (err) {
             console.error(err);
-            alert('Subscription initialization failed.');
+            alert('Payment initialization failed.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (user?.plan === 'pro') {
-        return (
-            <div className="max-w-4xl mx-auto py-12 px-6">
-                <div className="mb-10">
-                    <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">My Subscription</h1>
-                    <p className="text-muted-foreground font-medium">Manage your plan and billing details.</p>
-                </div>
-
-                <div className="bg-blue-50/10 dark:bg-primary/5 border border-primary/20 rounded-3xl p-10 md:p-16 text-center shadow-sm">
-                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <Star className="w-10 h-10 text-primary fill-primary" />
-                    </div>
-                    <h2 className="text-4xl font-extrabold tracking-tight mb-4">You are a <span className="text-primary font-black uppercase">Pro</span> Member</h2>
-                    <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto font-medium leading-relaxed">
-                        You have unlimited access to AI analysis, resume optimization, and export features. You're set for career success!
-                    </p>
-                    <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/10 rounded-full text-primary font-bold text-sm uppercase tracking-widest border border-primary/20">
-                        <Check className="w-4 h-4" />
-                        Active Plan
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="max-w-6xl mx-auto py-12 px-6">
-            <div className="mb-12">
-                <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Upgrade Your Career</h1>
-                <p className="text-muted-foreground text-lg font-medium">Choose the plan that fits your career goals and unlocks AI-powered insights.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Free Tier */}
-                <div className="bg-card border border-border p-8 md:p-12 rounded-[2.5rem] flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                    <div className="mb-10">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">The Candidate</h3>
-                        <div className="text-4xl font-extrabold mb-3">Free</div>
-                        <p className="text-muted-foreground font-medium">Perfect for basic job hunting and exploring.</p>
-                    </div>
-                    <ul className="space-y-5 mb-12 flex-1">
-                        <li className="flex items-center gap-3 text-sm font-semibold">
-                            <div className="p-1 bg-muted rounded-full">
-                                <Check className="w-3 h-3 text-muted-foreground" />
-                            </div>
-                            Access to all scraped jobs
-                        </li>
-                        <li className="flex items-center gap-3 text-sm font-semibold">
-                            <div className="p-1 bg-muted rounded-full">
-                                <Check className="w-3 h-3 text-muted-foreground" />
-                            </div>
-                            5 AI match analyses per month
-                        </li>
-                        <li className="flex items-center gap-3 text-sm font-semibold text-muted-foreground/40 line-through">
-                            <div className="p-1 opacity-40">
-                                <Check className="w-3 h-3" />
-                            </div>
-                            Premium PDF/DOCX Export
-                        </li>
-                    </ul>
-                    <button disabled className="w-full bg-muted text-muted-foreground py-4 rounded-xl font-bold uppercase tracking-widest text-xs cursor-not-allowed">
-                        Current Plan
-                    </button>
+            <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">Get More Credits</h1>
+                    <p className="text-muted-foreground text-lg font-medium">Power your job search with AI analysis. Each analysis costs 1 credit.</p>
                 </div>
 
-                {/* Pro Tier */}
-                <div className="bg-card border-2 border-primary p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden flex flex-col shadow-2xl shadow-primary/10">
-                    <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-6 py-3 rounded-bl-2xl">
-                        Recommended
+                <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2 bg-muted p-1 rounded-xl">
+                        <button
+                            onClick={() => setCurrency('NGN')}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${currency === 'NGN' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                        >
+                            ₦ NGN
+                        </button>
+                        <button
+                            onClick={() => setCurrency('USD')}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${currency === 'USD' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                        >
+                            $ USD
+                        </button>
                     </div>
-
-                    <div className="mb-10">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-primary mb-4">The Engineer</h3>
-                        <div className="text-6xl font-extrabold mb-3">₦5,000<span className="text-xl text-muted-foreground font-medium ml-1">/mo</span></div>
-                        <p className="text-muted-foreground font-medium">Unlock the full power of AI-driven job search.</p>
-                    </div>
-
-                    <ul className="space-y-5 mb-12 flex-1">
-                        <li className="flex items-center gap-3 text-sm font-bold">
-                            <div className="p-1 bg-primary text-white rounded-full">
-                                <Zap className="w-3 h-3" />
-                            </div>
-                            Unlimited AI match analyses
-                        </li>
-                        <li className="flex items-center gap-3 text-sm font-bold">
-                            <div className="p-1 bg-primary text-white rounded-full">
-                                <Check className="w-3 h-3" />
-                            </div>
-                            Infinite PDF/DOCX Exports
-                        </li>
-                        <li className="flex items-center gap-3 text-sm font-bold">
-                            <div className="p-1 bg-primary text-white rounded-full">
-                                <Check className="w-3 h-3" />
-                            </div>
-                            Priority support & engine updates
-                        </li>
-                        <li className="flex items-center gap-3 text-sm font-bold">
-                            <div className="p-1 bg-primary text-white rounded-full">
-                                <Star className="w-3 h-3" />
-                            </div>
-                            Early access to new features
-                        </li>
-                    </ul>
-
-                    <button
-                        onClick={handleSubscribe}
-                        disabled={isLoading}
-                        className="w-full bg-primary text-white hover:bg-blue-700 py-5 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-xl shadow-primary/30 active:scale-95 disabled:opacity-70"
-                    >
-                        {isLoading ? 'Processing...' : 'Upgrade Now'}
-                    </button>
-
-                    <p className="text-[10px] text-center mt-6 text-muted-foreground uppercase tracking-widest font-bold">
-                        Secure transaction via Paystack
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                        Location: <span className="text-primary">{location}</span>
                     </p>
                 </div>
             </div>
+
+            <div className="bg-card border border-border rounded-3xl p-6 mb-12 flex items-center justify-between shadow-sm">
+                <div>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Your Current Balance</p>
+                    <div className="flex items-center gap-2">
+                        <Coins className="w-6 h-6 text-yellow-500" />
+                        <span className="text-3xl font-black">{user?.credits || 0} Credits</span>
+                    </div>
+                </div>
+                <div className="hidden md:block">
+                    <p className="text-xs text-muted-foreground max-w-[200px]">Credits never expire and can be used for any AI features across the platform.</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {CREDIT_BUNDLES.map((bundle) => (
+                    <div
+                        key={bundle.id}
+                        className={`bg-card border-2 ${bundle.recommended ? 'border-primary shadow-2xl shadow-primary/10 scale-105' : 'border-border shadow-sm'} p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col transition-all hover:translate-y-[-4px]`}
+                    >
+                        {bundle.recommended && (
+                            <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-6 py-3 rounded-bl-2xl">
+                                Recommended
+                            </div>
+                        )}
+
+                        <div className="mb-8">
+                            <div className={`w-12 h-12 ${bundle.bgColor} ${bundle.color} rounded-2xl flex items-center justify-center mb-6`}>
+                                <bundle.icon className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-1">{bundle.name}</h3>
+                            <div className="flex items-baseline gap-1 mb-4">
+                                <span className="text-4xl font-black">
+                                    {currency === 'NGN' ? `₦${bundle.priceNGN.toLocaleString()}` : `$${bundle.priceUSD}`}
+                                </span>
+                            </div>
+                            <p className="text-muted-foreground text-sm font-medium leading-relaxed">{bundle.description}</p>
+                        </div>
+
+                        <div className="bg-muted/30 rounded-2xl p-4 mb-8">
+                            <div className="flex items-center justify-between text-sm font-bold">
+                                <span>Total Credits</span>
+                                <span className={bundle.color}>{bundle.credits}</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => handleSubscribe(bundle.id)}
+                            disabled={isLoading}
+                            className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95 disabled:opacity-70 ${bundle.recommended ? 'bg-primary text-white shadow-xl shadow-primary/30 hover:bg-blue-700' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                        >
+                            {isLoading ? 'Processing...' : 'Purchase Now'}
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <p className="text-center mt-12 text-xs text-muted-foreground uppercase tracking-widest font-bold">
+                Secure transaction via Paystack • Instant delivery
+            </p>
         </div>
     );
 }
