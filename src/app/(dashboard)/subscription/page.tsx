@@ -45,9 +45,8 @@ const CREDIT_BUNDLES = [
 
 export default function SubscriptionPage() {
     const { user } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
+    const [loadingBundleId, setLoadingBundleId] = useState<string | null>(null);
     const [currency, setCurrency] = useState<'NGN' | 'USD'>('NGN');
-    const [location, setLocation] = useState<string>('Detecting...');
 
     useEffect(() => {
         const detectLocation = async () => {
@@ -56,17 +55,15 @@ export default function SubscriptionPage() {
                 if (res.data.country_code !== 'NG') {
                     setCurrency('USD');
                 }
-                setLocation(res.data.country_name || 'Global');
             } catch (err) {
                 console.error('Location detection failed', err);
-                setLocation('Global');
             }
         };
         detectLocation();
     }, []);
 
     const handleSubscribe = async (bundleId: string) => {
-        setIsLoading(true);
+        setLoadingBundleId(bundleId);
         try {
             const res = await api.post('/payment/initialize', {
                 email: user?.email,
@@ -77,8 +74,7 @@ export default function SubscriptionPage() {
         } catch (err) {
             console.error(err);
             alert('Payment initialization failed.');
-        } finally {
-            setIsLoading(false);
+            setLoadingBundleId(null);
         }
     };
 
@@ -91,23 +87,9 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-2 bg-muted p-1 rounded-xl">
-                        <button
-                            onClick={() => setCurrency('NGN')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${currency === 'NGN' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                        >
-                            ₦ NGN
-                        </button>
-                        <button
-                            onClick={() => setCurrency('USD')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${currency === 'USD' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                        >
-                            $ USD
-                        </button>
+                    <div className="px-4 py-2 bg-muted rounded-xl text-sm font-bold text-foreground shadow-sm">
+                        {currency === 'NGN' ? '₦ NGN' : '$ USD'}
                     </div>
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                        Location: <span className="text-primary">{location}</span>
-                    </p>
                 </div>
             </div>
 
@@ -158,10 +140,10 @@ export default function SubscriptionPage() {
 
                         <button
                             onClick={() => handleSubscribe(bundle.id)}
-                            disabled={isLoading}
+                            disabled={loadingBundleId === bundle.id}
                             className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95 disabled:opacity-70 ${bundle.recommended ? 'bg-primary text-white shadow-xl shadow-primary/30 hover:bg-blue-700' : 'bg-muted text-foreground hover:bg-muted/80'}`}
                         >
-                            {isLoading ? 'Processing...' : 'Purchase Now'}
+                            {loadingBundleId === bundle.id ? 'Processing...' : 'Purchase Now'}
                         </button>
                     </div>
                 ))}
