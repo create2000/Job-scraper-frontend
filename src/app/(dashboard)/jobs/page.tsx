@@ -35,6 +35,10 @@ export default function JobsPage() {
     const [hasMore, setHasMore] = useState(true);
 
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const [isManualMode, setIsManualMode] = useState(false);
+    const [manualJD, setManualJD] = useState('');
+    const [selectedTemplate, setSelectedTemplate] = useState('classic');
+
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [selectedResumeId, setSelectedResumeId] = useState('');
@@ -110,6 +114,7 @@ export default function JobsPage() {
             return;
         }
         setSelectedJob(job);
+        setIsManualMode(false);
         setIsAnalyzing(true);
         setAnalysisResult(null);
 
@@ -120,7 +125,34 @@ export default function JobsPage() {
             setAnalysisResult(res.data.data);
         } catch (err) {
             console.error(err);
-            alert('Analysis failed. Make sure you have enough credits.');
+            alert('Analysis failed. Please try again later.');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleManualAnalyze = async () => {
+        if (!selectedResumeId) {
+            alert('Please upload a resume first!');
+            return;
+        }
+        if (!manualJD.trim()) {
+            alert('Please paste a job description!');
+            return;
+        }
+
+        setIsAnalyzing(true);
+        setAnalysisResult(null);
+
+        try {
+            const res = await api.post('/jobs/analyze-manual', {
+                resumeId: selectedResumeId,
+                jobDescription: manualJD
+            });
+            setAnalysisResult(res.data.data);
+        } catch (err) {
+            console.error(err);
+            alert('Analysis failed.');
         } finally {
             setIsAnalyzing(false);
         }
@@ -130,7 +162,7 @@ export default function JobsPage() {
         if (!analysisResult) return;
 
         try {
-            const res = await api.post(`/resumes/export?type=${type}`, {
+            const res = await api.post(`/resumes/export?type=${type}&template=${selectedTemplate}`, {
                 ...analysisResult,
                 fullName: user?.full_name || 'Professional'
             }, {
@@ -140,7 +172,7 @@ export default function JobsPage() {
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `Optimized_Resume.${type}`);
+            link.setAttribute('download', `Optimized_Resume_${selectedTemplate}.${type}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -152,9 +184,22 @@ export default function JobsPage() {
 
     return (
         <div className="pb-20">
-            <div className="mb-10">
-                <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Discover Opportunities</h1>
-                <p className="text-muted-foreground text-lg font-medium">Browse thousands of jobs scraped specifically for you.</p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Discover Opportunities</h1>
+                    <p className="text-muted-foreground text-lg font-medium">Browse thousands of jobs scraped specifically for you.</p>
+                </div>
+                <button
+                    onClick={() => {
+                        setIsManualMode(true);
+                        setAnalysisResult(null);
+                        setManualJD('');
+                    }}
+                    className="bg-primary text-white font-bold px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                >
+                    <FileText className="w-5 h-5" />
+                    Analyze Custom Job
+                </button>
             </div>
 
             {/* Filters */}
@@ -323,13 +368,13 @@ export default function JobsPage() {
 
             {/* Analysis Modal */}
             <AnimatePresence>
-                {selectedJob && (
+                {(selectedJob || isManualMode) && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedJob(null)}
+                            onClick={() => { setSelectedJob(null); setIsManualMode(false); }}
                             className="absolute inset-0 bg-background/80 backdrop-blur-md"
                         />
 
@@ -337,7 +382,7 @@ export default function JobsPage() {
                             initial={{ opacity: 0, scale: 0.9, y: 40 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 40 }}
-                            className="relative w-full max-w-2xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+                            className="relative w-full max-w-3xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
                         >
                             <div className="p-8 border-b border-border flex justify-between items-center bg-card/50 backdrop-blur-xl">
                                 <div className="flex items-center gap-4">
@@ -345,16 +390,40 @@ export default function JobsPage() {
                                         <Sparkles className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-black text-foreground uppercase tracking-tight leading-none mb-1">AI Insights</h2>
-                                        <p className="text-sm text-muted-foreground font-bold truncate max-w-75 uppercase tracking-widest">{selectedJob.title}</p>
+                                        <h2 className="text-2xl font-black text-foreground uppercase tracking-tight leading-none mb-1">
+                                            {isManualMode ? 'Custom Analysis' : 'AI Insights'}
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground font-bold truncate max-w-75 uppercase tracking-widest">
+                                            {isManualMode ? 'Analyze any Job Description' : selectedJob?.title}
+                                        </p>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedJob(null)} className="p-3 hover:bg-muted rounded-2xl transition-all">
+                                <button onClick={() => { setSelectedJob(null); setIsManualMode(false); }} className="p-3 hover:bg-muted rounded-2xl transition-all">
                                     <X className="w-6 h-6 text-muted-foreground" />
                                 </button>
                             </div>
 
                             <div className="p-8 max-h-[65vh] overflow-y-auto custom-scrollbar">
+                                {isManualMode && !analysisResult && !isAnalyzing && (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Paste Job Description</label>
+                                            <textarea
+                                                className="w-full bg-muted/30 border border-border rounded-2xl p-6 h-60 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground resize-none"
+                                                placeholder="Paste the job description you found from other sources here..."
+                                                value={manualJD}
+                                                onChange={(e) => setManualJD(e.target.value)}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleManualAnalyze}
+                                            className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                                        >
+                                            Start Analysis
+                                        </button>
+                                    </div>
+                                )}
+
                                 {isAnalyzing ? (
                                     <div className="flex flex-col items-center justify-center py-24 text-center">
                                         <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mb-8"></div>
@@ -436,30 +505,50 @@ export default function JobsPage() {
                                 ) : null}
                             </div>
 
-                            <div className="p-8 bg-card/80 border-t border-border flex justify-end items-center gap-4">
-                                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Powered by Gemini Pro</span>
-                                <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="p-8 bg-card/80 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
+                                {analysisResult && (
+                                    <div className="flex-1 w-full">
+                                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Resume Template</label>
+                                        <select
+                                            value={selectedTemplate}
+                                            onChange={(e) => setSelectedTemplate(e.target.value)}
+                                            className="w-full bg-background border border-border rounded-xl py-2.5 px-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground font-bold text-xs"
+                                        >
+                                            <option value="classic">Classic Professional</option>
+                                            <option value="europass">Europass CV</option>
+                                            <option value="modern">Modern Sidebar</option>
+                                            <option value="minimalist">Minimalist / Clean</option>
+                                            <option value="executive">Senior Executive</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="flex flex-wrap justify-end gap-3 w-full">
+                                    {analysisResult && (
+                                        <>
+                                            <button
+                                                onClick={() => handleExport('pdf')}
+                                                className="bg-primary hover:bg-primary/90 text-white font-black px-6 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                                Export PDF
+                                            </button>
+                                            <button
+                                                onClick={() => handleExport('docx')}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                Export DOCX
+                                            </button>
+                                        </>
+                                    )}
                                     <button
-                                        onClick={() => handleExport('pdf')}
-                                        className="bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                                        onClick={() => { setSelectedJob(null); setIsManualMode(false); }}
+                                        className="bg-muted hover:bg-muted/80 text-foreground font-black px-6 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] active:scale-95"
                                     >
-                                        <ExternalLink className="w-4 h-4" />
-                                        Export PDF
-                                    </button>
-                                    <button
-                                        onClick={() => handleExport('docx')}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] shadow-xl active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        <FileText className="w-4 h-4" />
-                                        Export DOCX
+                                        Close
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedJob(null)}
-                                    className="bg-muted hover:bg-muted/80 text-foreground font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px] active:scale-95"
-                                >
-                                    Close
-                                </button>
                             </div>
                         </motion.div>
                     </div>

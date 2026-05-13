@@ -136,16 +136,9 @@ export default function Sidebar({
                             <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-1">Plan</p>
                             <div className="flex items-center justify-between">
                                 <span className="text-foreground font-bold capitalize text-sm">{user?.plan || 'Free'}</span>
-                                <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full">{user?.credits} Credits</span>
                             </div>
                         </div>
-                    ) : (
-                        <div className="flex justify-center mb-4">
-                            <span className="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-full font-bold">
-                                {user?.credits}
-                            </span>
-                        </div>
-                    )}
+                    ) : null}
 
                     <div className={cn("mb-2", isCollapsed && "flex justify-center")}>
                         <ThemeToggle />

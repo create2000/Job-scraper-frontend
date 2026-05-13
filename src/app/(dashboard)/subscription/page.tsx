@@ -47,6 +47,7 @@ export default function SubscriptionPage() {
     const { user } = useAuth();
     const [loadingBundleId, setLoadingBundleId] = useState<string | null>(null);
     const [currency, setCurrency] = useState<'NGN' | 'USD'>('NGN');
+    const [authUrl, setAuthUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const detectLocation = async () => {
@@ -62,6 +63,12 @@ export default function SubscriptionPage() {
         detectLocation();
     }, []);
 
+    useEffect(() => {
+        if (authUrl) {
+            window.location.href = authUrl;
+        }
+    }, [authUrl]);
+
     const handleSubscribe = async (bundleId: string) => {
         setLoadingBundleId(bundleId);
         try {
@@ -70,7 +77,7 @@ export default function SubscriptionPage() {
                 bundleId,
                 currency
             });
-            window.location.href = res.data.data.authorization_url;
+            setAuthUrl(res.data.data.authorization_url);
         } catch (err) {
             console.error(err);
             alert('Payment initialization failed.');
@@ -82,7 +89,7 @@ export default function SubscriptionPage() {
         <div className="max-w-6xl mx-auto py-12 px-6">
             <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">Get More Credits</h1>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Get More Credits</h1>
                     <p className="text-muted-foreground text-lg font-medium">Power your job search with AI analysis. Each analysis costs 1 credit.</p>
                 </div>
 
