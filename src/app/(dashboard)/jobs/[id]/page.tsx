@@ -178,7 +178,8 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
 
     const handleDownload = (resumeId: string, template: string, type: 'pdf' | 'docx') => {
         const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        window.open(`${backend}/resumes/export?resumeId=${resumeId}&template=${template}&type=${type}`, '_blank');
+        const token = localStorage.getItem('token');
+        window.open(`${backend}/resumes/export?resumeId=${resumeId}&template=${template}&type=${type}&token=${token}`, '_blank');
     };
 
     if (isLoading) {

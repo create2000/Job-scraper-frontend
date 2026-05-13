@@ -14,7 +14,9 @@ import {
     CheckCircle2,
     Star,
     AlertTriangle,
-    X
+    X,
+    Eye,
+    Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,6 +34,8 @@ export default function ResumesPage() {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [settingActiveId, setSettingActiveId] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Resume | null>(null);
+    const [viewingResume, setViewingResume] = useState<any | null>(null);
+    const [isFetchingResume, setIsFetchingResume] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
@@ -98,6 +102,24 @@ export default function ResumesPage() {
         } finally {
             setSettingActiveId(null);
         }
+    };
+
+    const handleView = async (id: string) => {
+        setIsFetchingResume(true);
+        try {
+            const res = await api.get(`/resumes/${id}`);
+            setViewingResume(res.data);
+        } catch {
+            showToast('Failed to load resume details.', 'error');
+        } finally {
+            setIsFetchingResume(false);
+        }
+    };
+
+    const handleDownload = (id: string) => {
+        const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const token = localStorage.getItem('token');
+        window.open(`${backend}/resumes/${id}/download?token=${token}`, '_blank');
     };
 
     const activeResume = resumes.find(r => r.is_active);
@@ -276,9 +298,26 @@ export default function ResumesPage() {
                                             </span>
                                             <span className="text-xs font-bold text-emerald-500 uppercase flex items-center gap-1">
                                                 <Sparkles className="w-3 h-3" />
-                                                AI Ready
+                                                {(resume as any).is_tailored ? 'AI Tailored' : 'AI Ready'}
                                             </span>
                                         </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 ml-auto">
+                                        <button
+                                            onClick={() => handleView(resume.id)}
+                                            className="p-2.5 rounded-xl bg-muted hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all active:scale-95"
+                                            title="View resume"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownload(resume.id)}
+                                            className="p-2.5 rounded-xl bg-muted hover:bg-emerald-500/10 hover:text-emerald-500 text-muted-foreground transition-all active:scale-95"
+                                            title="Download resume"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
 
@@ -323,6 +362,97 @@ export default function ResumesPage() {
                     <h2 className="text-2xl font-bold text-foreground">Account</h2>
                 </div>
             </div>
+
+            {/* View Resume Modal */}
+            <AnimatePresence>
+                {viewingResume && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setViewingResume(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-card border border-border rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-foreground mb-1">{viewingResume.filename}</h3>
+                                    <p className="text-sm text-muted-foreground uppercase font-black tracking-widest">
+                                        Added on {new Date(viewingResume.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => handleDownload(viewingResume.id)}
+                                        className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl hover:bg-emerald-500/20 transition-colors"
+                                        title="Download"
+                                    >
+                                        <Download className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => setViewingResume(null)} className="p-3 hover:bg-muted rounded-2xl transition-colors">
+                                        <X className="w-5 h-5 text-muted-foreground" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                                {viewingResume.structured_data ? (
+                                    <div className="space-y-8">
+                                        <section>
+                                            <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-3">Summary</h4>
+                                            <p className="text-foreground leading-relaxed bg-muted/30 p-6 rounded-2xl">{viewingResume.structured_data.summary}</p>
+                                        </section>
+
+                                        <section>
+                                            <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-3">Experience</h4>
+                                            <div className="space-y-6">
+                                                {viewingResume.structured_data.experience?.map((exp: any, i: number) => (
+                                                    <div key={i} className="border-l-2 border-primary/20 pl-6 py-1">
+                                                        <h5 className="font-bold text-lg">{exp.title}</h5>
+                                                        <p className="text-sm font-semibold text-muted-foreground mb-3">{exp.company} • {exp.duration}</p>
+                                                        <ul className="space-y-2">
+                                                            {exp.bullets?.map((bullet: string, j: number) => (
+                                                                <li key={j} className="text-sm text-foreground/80 flex gap-2">
+                                                                    <span className="text-primary">•</span>
+                                                                    {bullet}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-3">Skills</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingResume.structured_data.skills?.map((skill: string, i: number) => (
+                                                    <span key={i} className="bg-primary/5 text-primary text-xs font-bold px-4 py-2 rounded-full border border-primary/10">
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    </div>
+                                ) : (
+                                    <div className="bg-muted/30 p-8 rounded-3xl">
+                                        <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-4">Extracted Text</h4>
+                                        <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
+                                            {viewingResume.extracted_text}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
