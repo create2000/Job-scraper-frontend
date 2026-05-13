@@ -12,8 +12,9 @@ import {
     CheckCircle2,
     ShieldAlert,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { Download, FileDown, Layout, UserCheck, X } from 'lucide-react';
 
 interface Job {
     id: string;
@@ -49,6 +50,11 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     const [isApplying, setIsApplying] = useState(false);
     const [applyLoading, setApplyLoading] = useState(false);
     const [coverLetter, setCoverLetter] = useState('');
+    const [isTailoring, setIsTailoring] = useState(false);
+    const [showTailorModal, setShowTailorModal] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState('modern');
+    const [resumes, setResumes] = useState<any[]>([]);
+    const [tailoredResumeId, setTailoredResumeId] = useState<string | null>(null);
 
     const fetchSavedStatus = useCallback(async () => {
         try {
@@ -111,13 +117,16 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     const fetchResumes = useCallback(async () => {
         try {
             const res = await api.get('/resumes');
-            if (res.data.length > 0) {
-                setSelectedResumeId(res.data[0].id);
+            setResumes(res.data);
+            if (res.data.length > 0 && !selectedResumeId) {
+                // Pre-select the active resume if it exists, otherwise the first one
+                const active = res.data.find((r: any) => r.is_active);
+                setSelectedResumeId(active ? active.id : res.data[0].id);
             }
         } catch (err) {
             console.error(err);
         }
-    }, []);
+    }, [selectedResumeId]);
 
     useEffect(() => {
         fetchJob();
@@ -145,6 +154,31 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         } finally {
             setIsAnalyzing(false);
         }
+    };
+
+    const handleTailor = async () => {
+        if (!selectedResumeId) return;
+        setIsTailoring(true);
+        try {
+            const res = await api.post(`/resumes/${selectedResumeId}/tailor`, {
+                jobId: id,
+                template: selectedTemplate
+            });
+            setTailoredResumeId(res.data.resumeId);
+            await fetchResumes(); // Refresh list to show new resume
+            alert('CV Tailored and saved to your portfolio!');
+            setShowTailorModal(false);
+        } catch (err) {
+            console.error(err);
+            alert('Tailoring failed.');
+        } finally {
+            setIsTailoring(false);
+        }
+    };
+
+    const handleDownload = (resumeId: string, template: string, type: 'pdf' | 'docx') => {
+        const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        window.open(`${backend}/resumes/export?resumeId=${resumeId}&template=${template}&type=${type}`, '_blank');
     };
 
     if (isLoading) {
@@ -321,26 +355,21 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                                     Run Match Engine
                                 </button>
                             )}
+                            {/* Tailor CV Button */}
+                            {analysisResult && !isAnalyzing && (
+                                <button
+                                    onClick={() => setShowTailorModal(true)}
+                                    className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    <Layout className="w-4 h-4" />
+                                    Tailor CV for this Job
+                                </button>
+                            )}
+
                             {/* Persistent Apply CTA */}
                             <button
-                                onClick={async () => {
-                                    try {
-                                        const res = await api.post(`/jobs/${id}/record`);
-                                        const url = res.data?.url;
-                                        if (url) {
-                                            window.open(url, '_blank');
-                                        } else {
-                                            // fallback to backend redirect endpoint
-                                            const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-                                            window.open(`${backend}/jobs/${id}/redirect`, '_blank');
-                                        }
-                                    } catch (err) {
-                                        console.error('Failed to record click, falling back to redirect', err);
-                                        const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-                                        window.open(`${backend}/jobs/${id}/redirect`, '_blank');
-                                    }
-                                }}
-                                className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95"
+                                onClick={() => setIsApplying(true)}
+                                className="w-full mt-4 bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95"
                             >
                                 Apply Now
                             </button>
@@ -401,10 +430,12 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                         <h3 className="text-xl font-black mb-3">Apply to {job?.title}</h3>
                         <div className="space-y-3">
                             <label className="text-sm font-bold">Resume</label>
-                            <select value={selectedResumeId} onChange={(e) => setSelectedResumeId(e.target.value)} className="w-full p-3 border border-border rounded-xl">
-                                <option value="">Select a resume</option>
-                                {/* resumes fetched earlier set default; backend returns id & filename */}
-                                {/* We'll fetch resumes list on mount via fetchResumes which already runs */}
+                            <select value={selectedResumeId} onChange={(e) => setSelectedResumeId(e.target.value)} className="w-full p-3 border border-border rounded-xl bg-card">
+                                {resumes.map(r => (
+                                    <option key={r.id} value={r.id}>
+                                        {r.filename} {r.is_active ? '(Active)' : ''}
+                                    </option>
+                                ))}
                             </select>
 
                             <label className="text-sm font-bold">Cover Letter (optional)</label>
@@ -436,6 +467,89 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     </div>
                 </div>
             )}
+
+            {/* Tailor Modal */}
+            <AnimatePresence>
+                {showTailorModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setShowTailorModal(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-2xl bg-card border border-border p-8 rounded-[2.5rem] z-10 shadow-2xl"
+                        >
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="text-2xl font-black uppercase tracking-tight">Tailor Your CV</h3>
+                                <button onClick={() => setShowTailorModal(false)} className="p-2 hover:bg-muted rounded-full">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <p className="text-muted-foreground mb-8">
+                                Our AI will rewrite your resume to highlight the strengths and address the gaps found in the analysis. Select a layout to continue.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                {['modern', 'classic', 'minimalist', 'europass'].map((t) => (
+                                    <button
+                                        key={t}
+                                        onClick={() => setSelectedTemplate(t)}
+                                        className={`p-6 rounded-2xl border-2 transition-all text-left group ${selectedTemplate === t ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                                    >
+                                        <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center ${selectedTemplate === t ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+                                            <Layout className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold capitalize mb-1">{t}</h4>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Select Layout</p>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={handleTailor}
+                                    disabled={isTailoring}
+                                    className="flex-1 bg-primary hover:bg-blue-700 text-white font-black py-4 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                                >
+                                    {isTailoring ? 'Generating...' : 'Generate Tailored CV'}
+                                </button>
+                            </div>
+
+                            {tailoredResumeId && (
+                                <div className="mt-8 p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                                        <UserCheck className="w-4 h-4" />
+                                        Tailored CV Ready!
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => handleDownload(tailoredResumeId, selectedTemplate, 'pdf')}
+                                            className="flex-1 flex items-center justify-center gap-2 bg-card border border-border py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-muted transition-all"
+                                        >
+                                            <FileDown className="w-4 h-4" />
+                                            Download PDF
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownload(tailoredResumeId, selectedTemplate, 'docx')}
+                                            className="flex-1 flex items-center justify-center gap-2 bg-card border border-border py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-muted transition-all"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Download DOCX
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
